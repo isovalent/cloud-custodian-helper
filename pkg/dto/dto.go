@@ -18,8 +18,9 @@ type Account struct {
 }
 
 type Resource struct {
-	Name    string    `json:"name"`
-	Created time.Time `json:"created"`
+	Name     string    `json:"name"`
+	Location string    `json:"location"`
+	Created  time.Time `json:"created"`
 }
 
 func (r *PolicyReport) ReadFromFile(reportFile string) error {
