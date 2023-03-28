@@ -11,10 +11,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
-var resourceParsers = map[string]func(content []byte) ([]dto.Resource, error){
+var resourceParsers = map[string]func(region string, content []byte) ([]dto.Resource, error){
 	"eks": aws.EKS,
 	"ec2": aws.EC2,
 	"gke": gcp.GKE,
@@ -33,6 +34,8 @@ func Parse(resourceType, c7nDir, policy, outFile string) error {
 	if err != nil {
 		return err
 	}
+	log.Println("Sorting resources...")
+	sortResources(report.Accounts)
 	log.Println("Persisting JSON report...")
 	return persistReport(report, outFile)
 }
@@ -54,35 +57,38 @@ func resourceFiles(c7nDir, policy string) ([]string, error) {
 func reportFromFiles(files []string, resourceType, policy string) (dto.PolicyReport, error) {
 	accountMap := make(map[string]dto.Account)
 	for _, file := range files {
-		resources, err := resourcesFromFile(resourceType, file)
+		accName, region := accountRegion(file)
+		resources, err := resourcesFromFile(resourceType, region, file)
 		if err != nil {
 			return dto.PolicyReport{}, err
 		}
 		if len(resources) == 0 {
 			continue
 		}
-		accName, region := accountRegion(file)
 		account, ok := accountMap[accName]
 		if !ok {
-			account = dto.Account{
-				Name:            accName,
-				RegionResources: make(map[string][]dto.Resource),
-			}
-			accountMap[accName] = account
+			account = dto.Account{Name: accName, Resources: make([]dto.Resource, 0)}
 		}
-		if _, ok := account.RegionResources[region]; !ok {
-			account.RegionResources[region] = make([]dto.Resource, 0)
-		}
-		account.RegionResources[region] = append(account.RegionResources[region], resources...)
+		account.Resources = append(account.Resources, resources...)
+		accountMap[accName] = account
 	}
 	return dto.PolicyReport{
-		ResourceType: resourceType,
-		C7NPolicy:    policy,
-		Accounts:     accountsFromMap(accountMap),
+		Type:     resourceType,
+		Policy:   policy,
+		Accounts: accountsFromMap(accountMap),
 	}, nil
 }
 
-func resourcesFromFile(resourceType, file string) ([]dto.Resource, error) {
+func sortResources(accounts []dto.Account) {
+	for i := range accounts {
+		acc := accounts[i]
+		sort.Slice(acc.Resources, func(i, j int) bool {
+			return acc.Resources[i].Created.Before(acc.Resources[j].Created)
+		})
+	}
+}
+
+func resourcesFromFile(resourceType, region, file string) ([]dto.Resource, error) {
 	parser, ok := resourceParsers[resourceType]
 	if !ok {
 		return nil, errors.New("unsupported resource type")
@@ -91,7 +97,7 @@ func resourcesFromFile(resourceType, file string) ([]dto.Resource, error) {
 	if err != nil {
 		return nil, err
 	}
-	return parser(content)
+	return parser(region, content)
 }
 
 func accountsFromMap(accountMap map[string]dto.Account) []dto.Account {
@@ -114,7 +120,6 @@ func persistReport(report dto.PolicyReport, outFile string) error {
 func accountRegion(file string) (string, string) {
 	parts := strings.Split(file, "/")
 	l := len(parts)
-	//TODO: must be improved for Azure & GCP
 	return parts[l-4] /* account */, parts[l-3] /* region */
 }
 

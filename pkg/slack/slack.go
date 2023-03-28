@@ -7,7 +7,6 @@ import (
 	"github.com/lensesio/tableprinter"
 	"log"
 	"net/http"
-	"sort"
 	"strings"
 	"unicode/utf8"
 )
@@ -42,16 +41,8 @@ func reportToSlackMessages(title string, report dto.PolicyReport) []string {
 		messages = append(messages, fmt.Sprintf("{\"text\":\"%s\"}", title))
 	}
 	for _, account := range report.Accounts {
-		index := 0
-		resources := make([]Resource, 0)
-		for region, res := range account.RegionResources {
-			sort.Slice(res, func(i, j int) bool {
-				return res[i].Created.After(res[j].Created)
-			})
-			resources = append(resources, resourcesFromDto(region, res, &index)...)
-		}
 		buf := bytes.NewBufferString("")
-		tableprinter.Print(buf, resources)
+		tableprinter.Print(buf, resourcesFromDto(account.Resources))
 		for _, message := range normalizeMessage(buf.String()) {
 			payload := fmt.Sprintf("*%s*\n```\n%s```\n", account.Name, message)
 			messages = append(messages, fmt.Sprintf("{\"text\":\"%s\"}", payload))
@@ -60,17 +51,12 @@ func reportToSlackMessages(title string, report dto.PolicyReport) []string {
 	return messages
 }
 
-func resourcesFromDto(region string, resources []dto.Resource, index *int) []Resource {
+func resourcesFromDto(resources []dto.Resource) []Resource {
 	result := make([]Resource, 0, len(resources))
-	for _, r := range resources {
-		*index++
-		location := region
-		if r.Location != "" {
-			location = r.Location
-		}
+	for i, r := range resources {
 		result = append(result, Resource{
-			Index:   *index,
-			Region:  location,
+			Index:   i + 1,
+			Region:  r.Location,
 			Name:    r.Name,
 			Created: r.Created.Format("2006-01-02"),
 		})

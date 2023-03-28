@@ -19,7 +19,7 @@ type gce struct {
 	LaunchTime time.Time `json:"creationTimestamp"`
 }
 
-func GKE(content []byte) ([]dto.Resource, error) {
+func GKE(_ string, content []byte) ([]dto.Resource, error) {
 	var clusters []gke
 	if err := json.Unmarshal(content, &clusters); err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func GKE(content []byte) ([]dto.Resource, error) {
 	return result, nil
 }
 
-func GCE(content []byte) ([]dto.Resource, error) {
+func GCE(_ string, content []byte) ([]dto.Resource, error) {
 	var vms []gce
 	if err := json.Unmarshal(content, &vms); err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func GCE(content []byte) ([]dto.Resource, error) {
 	return result, nil
 }
 
-// Zone value: `https://www.googleapis.com/compute/v1/projects/cilium-dev/zones/us-central1-a`
+// Zone value: `https://www.googleapis.com/compute/v1/projects/<project-name>/zones/us-central1-a`
 func normalizeZone(zone string) string {
 	parts := strings.Split(zone, "/")
 	if len(parts) < 2 {

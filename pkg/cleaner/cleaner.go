@@ -13,8 +13,8 @@ func Clean(resourceFile string) error {
 		return err
 	}
 	for _, account := range report.Accounts {
-		for region, resources := range account.RegionResources {
-			log.Printf("Cleaning %s [%d] in %s [%s] ...\n", strings.ToUpper(report.ResourceType), len(resources), account.Name, region)
+		for _, resource := range account.Resources {
+			log.Printf("Deleteing %s %s in %s [%s] ...\n", strings.ToUpper(report.Type), resource.Name, account.Name, resource.Location)
 			//TODO: implement me
 		}
 	}
