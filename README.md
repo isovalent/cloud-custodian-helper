@@ -23,7 +23,7 @@ $ make lint
 To build `c7n-helper` from source please run the following locally:
 
 ```console
-$ make compile
+$ make build
 ```
 
 ## Usage

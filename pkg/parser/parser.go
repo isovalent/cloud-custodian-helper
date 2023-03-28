@@ -1,21 +1,25 @@
 package parser
 
 import (
-	"c7n-helper/pkg/cloud"
+	"c7n-helper/pkg/aws"
+	"c7n-helper/pkg/azure"
 	"c7n-helper/pkg/dto"
+	"c7n-helper/pkg/gcp"
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-var resourceParsers = map[string]func(file string) ([]dto.Resource, error){
-	"eks": cloud.EksFromFile,
-	"ec2": cloud.Ec2FromFile,
-	"gke": cloud.GkeFromFile,
-	"gce": cloud.GceFromFile,
+var resourceParsers = map[string]func(content []byte) ([]dto.Resource, error){
+	"eks": aws.EKS,
+	"ec2": aws.EC2,
+	"gke": gcp.GKE,
+	"gce": gcp.GCE,
+	"arg": azure.RG,
 }
 
 func Parse(resourceType, c7nDir, policy, outFile string) error {
@@ -83,7 +87,11 @@ func resourcesFromFile(resourceType, file string) ([]dto.Resource, error) {
 	if !ok {
 		return nil, errors.New("unsupported resource type")
 	}
-	return parser(file)
+	content, err := jsonToBytes(file)
+	if err != nil {
+		return nil, err
+	}
+	return parser(content)
 }
 
 func accountsFromMap(accountMap map[string]dto.Account) []dto.Account {
@@ -106,5 +114,15 @@ func persistReport(report dto.PolicyReport, outFile string) error {
 func accountRegion(file string) (string, string) {
 	parts := strings.Split(file, "/")
 	l := len(parts)
+	//TODO: must be improved for Azure & GCP
 	return parts[l-4] /* account */, parts[l-3] /* region */
+}
+
+func jsonToBytes(file string) ([]byte, error) {
+	jsonFile, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer jsonFile.Close()
+	return io.ReadAll(jsonFile)
 }
