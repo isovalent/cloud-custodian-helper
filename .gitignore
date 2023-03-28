@@ -4,6 +4,8 @@
 *.dll
 *.so
 *.dylib
+c7n-helper
+resources.json
 
 # Test binary, built with `go test -c`
 *.test
