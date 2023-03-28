@@ -18,7 +18,7 @@ type ec2 struct {
 	InstanceType string    `json:"InstanceType"`
 }
 
-func EKS(content []byte) ([]dto.Resource, error) {
+func EKS(region string, content []byte) ([]dto.Resource, error) {
 	var clusters []eks
 	if err := json.Unmarshal(content, &clusters); err != nil {
 		return nil, err
@@ -26,14 +26,15 @@ func EKS(content []byte) ([]dto.Resource, error) {
 	result := make([]dto.Resource, 0, len(clusters))
 	for _, cluster := range clusters {
 		result = append(result, dto.Resource{
-			Name:    cluster.Name,
-			Created: cluster.CreatedAt,
+			Name:     cluster.Name,
+			Location: region,
+			Created:  cluster.CreatedAt,
 		})
 	}
 	return result, nil
 }
 
-func EC2(content []byte) ([]dto.Resource, error) {
+func EC2(region string, content []byte) ([]dto.Resource, error) {
 	var vms []ec2
 	if err := json.Unmarshal(content, &vms); err != nil {
 		return nil, err
@@ -41,8 +42,9 @@ func EC2(content []byte) ([]dto.Resource, error) {
 	result := make([]dto.Resource, 0, len(vms))
 	for _, ec2 := range vms {
 		result = append(result, dto.Resource{
-			Name:    fmt.Sprintf("%s [%s]", ec2.InstanceId, ec2.InstanceType),
-			Created: ec2.LaunchTime,
+			Name:     fmt.Sprintf("%s [%s]", ec2.InstanceId, ec2.InstanceType),
+			Location: region,
+			Created:  ec2.LaunchTime,
 		})
 	}
 	return result, nil

@@ -16,7 +16,7 @@ type tags struct {
 	Expiry string `json:"expiry"`
 }
 
-func RG(content []byte) ([]dto.Resource, error) {
+func RG(_ string, content []byte) ([]dto.Resource, error) {
 	var groups []rg
 	if err := json.Unmarshal(content, &groups); err != nil {
 		return nil, err

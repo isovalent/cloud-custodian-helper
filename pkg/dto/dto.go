@@ -7,14 +7,14 @@ import (
 )
 
 type PolicyReport struct {
-	ResourceType string    `json:"resourceType"`
-	C7NPolicy    string    `json:"policyName"`
-	Accounts     []Account `json:"accounts"`
+	Type     string    `json:"type"`
+	Policy   string    `json:"policy"`
+	Accounts []Account `json:"accounts"`
 }
 
 type Account struct {
-	Name            string                `json:"name"`
-	RegionResources map[string][]Resource `json:"regionResources"`
+	Name      string     `json:"name"`
+	Resources []Resource `json:"resources"`
 }
 
 type Resource struct {
