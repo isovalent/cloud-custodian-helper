@@ -23,7 +23,7 @@ func RG(content []byte) ([]dto.Resource, error) {
 	}
 	result := make([]dto.Resource, 0, len(groups))
 	for _, group := range groups {
-		created, err := time.Parse(time.DateTime, group.Tags.Expiry)
+		created, err := time.Parse("2006-01-02 15:04:05", group.Tags.Expiry)
 		if err != nil {
 			created = time.Now()
 		}

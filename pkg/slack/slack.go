@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-	"time"
 	"unicode/utf8"
 )
 
@@ -73,7 +72,7 @@ func resourcesFromDto(region string, resources []dto.Resource, index *int) []Res
 			Index:   *index,
 			Region:  location,
 			Name:    r.Name,
-			Created: r.Created.Format(time.DateOnly),
+			Created: r.Created.Format("2006-01-02"),
 		})
 	}
 	return result
