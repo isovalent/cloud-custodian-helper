@@ -1,30 +1,25 @@
-package cloud
+package aws
 
 import (
-	"c7n-helper/pkg/converter"
 	"c7n-helper/pkg/dto"
 	"encoding/json"
 	"fmt"
 	"time"
 )
 
-type EKS struct {
-	Name      string    `converter:"name"`
-	CreatedAt time.Time `converter:"createdAt"`
+type eks struct {
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
-type EC2 struct {
-	InstanceId   string    `converter:"InstanceId"`
-	LaunchTime   time.Time `converter:"LaunchTime"`
-	InstanceType string    `converter:"InstanceType"`
+type ec2 struct {
+	InstanceId   string    `json:"InstanceId"`
+	LaunchTime   time.Time `json:"LaunchTime"`
+	InstanceType string    `json:"InstanceType"`
 }
 
-func EksFromFile(file string) ([]dto.Resource, error) {
-	content, err := converter.JsonToBytes(file)
-	if err != nil {
-		return nil, err
-	}
-	var clusters []EKS
+func EKS(content []byte) ([]dto.Resource, error) {
+	var clusters []eks
 	if err := json.Unmarshal(content, &clusters); err != nil {
 		return nil, err
 	}
@@ -38,12 +33,8 @@ func EksFromFile(file string) ([]dto.Resource, error) {
 	return result, nil
 }
 
-func Ec2FromFile(file string) ([]dto.Resource, error) {
-	content, err := converter.JsonToBytes(file)
-	if err != nil {
-		return nil, err
-	}
-	var vms []EC2
+func EC2(content []byte) ([]dto.Resource, error) {
+	var vms []ec2
 	if err := json.Unmarshal(content, &vms); err != nil {
 		return nil, err
 	}
