@@ -29,6 +29,10 @@ func Notify(resourceFile, url, title string) error {
 	if err := report.ReadFromFile(resourceFile); err != nil {
 		return err
 	}
+	if len(report.Accounts) == 0 {
+		log.Println("Nothing to send...")
+		return nil
+	}
 	log.Println("Preparing slack messages...")
 	messages := reportToSlackMessages(title, report)
 	log.Println("Sending slack notification...")
