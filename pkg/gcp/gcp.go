@@ -7,20 +7,12 @@ import (
 	"time"
 )
 
-type gke struct {
-	Name      string    `json:"name"`
-	Location  string    `json:"location"`
-	CreatedAt time.Time `json:"createTime"`
-}
-
-type gce struct {
-	Name       string    `json:"name"`
-	Zone       string    `json:"zone"`
-	LaunchTime time.Time `json:"creationTimestamp"`
-}
-
 func GKE(_ string, content []byte) ([]dto.Resource, error) {
-	var clusters []gke
+	var clusters []struct {
+		Name      string    `json:"name"`
+		Location  string    `json:"location"`
+		CreatedAt time.Time `json:"createTime"`
+	}
 	if err := json.Unmarshal(content, &clusters); err != nil {
 		return nil, err
 	}
@@ -36,7 +28,11 @@ func GKE(_ string, content []byte) ([]dto.Resource, error) {
 }
 
 func GCE(_ string, content []byte) ([]dto.Resource, error) {
-	var vms []gce
+	var vms []struct {
+		Name       string    `json:"name"`
+		Zone       string    `json:"zone"`
+		LaunchTime time.Time `json:"creationTimestamp"`
+	}
 	if err := json.Unmarshal(content, &vms); err != nil {
 		return nil, err
 	}
