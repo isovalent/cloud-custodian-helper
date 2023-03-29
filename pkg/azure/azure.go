@@ -6,18 +6,16 @@ import (
 	"time"
 )
 
-type rg struct {
-	Name     string `json:"name"`
-	Location string `json:"location"`
-	Tags     tags   `json:"tags"`
-}
-
 type tags struct {
 	Expiry string `json:"expiry"`
 }
 
 func RG(_ string, content []byte) ([]dto.Resource, error) {
-	var groups []rg
+	var groups []struct {
+		Name     string `json:"name"`
+		Location string `json:"location"`
+		Tags     tags   `json:"tags"`
+	}
 	if err := json.Unmarshal(content, &groups); err != nil {
 		return nil, err
 	}

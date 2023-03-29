@@ -7,19 +7,11 @@ import (
 	"time"
 )
 
-type eks struct {
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-type ec2 struct {
-	InstanceId   string    `json:"InstanceId"`
-	LaunchTime   time.Time `json:"LaunchTime"`
-	InstanceType string    `json:"InstanceType"`
-}
-
 func EKS(region string, content []byte) ([]dto.Resource, error) {
-	var clusters []eks
+	var clusters []struct {
+		Name      string    `json:"name"`
+		CreatedAt time.Time `json:"createdAt"`
+	}
 	if err := json.Unmarshal(content, &clusters); err != nil {
 		return nil, err
 	}
@@ -35,7 +27,11 @@ func EKS(region string, content []byte) ([]dto.Resource, error) {
 }
 
 func EC2(region string, content []byte) ([]dto.Resource, error) {
-	var vms []ec2
+	var vms []struct {
+		InstanceId   string    `json:"InstanceId"`
+		LaunchTime   time.Time `json:"LaunchTime"`
+		InstanceType string    `json:"InstanceType"`
+	}
 	if err := json.Unmarshal(content, &vms); err != nil {
 		return nil, err
 	}
