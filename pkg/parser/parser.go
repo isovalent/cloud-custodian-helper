@@ -16,8 +16,8 @@ import (
 )
 
 var resourceParsers = map[string]func(region string, content []byte) ([]dto.Resource, error){
-	"eks": aws.EKS,
-	"ec2": aws.EC2,
+	"eks": aws.ParseEKS,
+	"ec2": aws.ParseEC2,
 	"gke": gcp.GKE,
 	"gce": gcp.GCE,
 	"arg": azure.RG,

@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"c7n-helper/pkg/cleaner"
+	"c7n-helper/pkg/log"
+	"context"
 	"github.com/spf13/cobra"
-	"log"
 	"time"
 )
 
@@ -25,13 +26,14 @@ func init() {
 	cleanFile = cleanCmd.Flags().StringP("resource-file", "r", "", "Resource JSON file")
 	_ = cleanCmd.MarkFlagRequired("resource-file")
 	_ = cleanCmd.MarkFlagFilename("resource-file")
-	cleanTries = cleanCmd.Flags().IntP("tries-count", "t", 3, "Clean tries count")
+	cleanTries = cleanCmd.Flags().IntP("tries-count", "t", 5, "Clean tries count")
 	cleanRetry = cleanCmd.Flags().DurationP("retry-duration", "d", time.Minute, "Clean retry pause")
 	rootCmd.AddCommand(cleanCmd)
 }
 
 func clean(_ *cobra.Command, _ []string) {
-	if err := cleaner.Clean(*cleanFile, *cleanTries, *cleanRetry); err != nil {
-		log.Fatal(err.Error())
+	ctx := context.Background()
+	if err := cleaner.Clean(ctx, *cleanFile, *cleanTries, *cleanRetry); err != nil {
+		log.FromContext(ctx).Fatal(err)
 	}
 }
