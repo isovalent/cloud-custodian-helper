@@ -3,37 +3,51 @@ package aws
 import (
 	"c7n-helper/pkg/dto"
 	"context"
-	"github.com/hashicorp/go-multierror"
-	"log"
+	"encoding/json"
+	"errors"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"time"
 )
 
-func DeleteClusters(ctx context.Context, accounts []dto.Account, tries int, retryInterval time.Duration) error {
-	wg := multierror.Group{}
-	for _, account := range accounts {
-		for _, resource := range account.Resources {
-			cl := clientsMap[clientKey(account.Name, resource.Location)]
-			clusterName := resource.Name
-			wg.Go(func() error {
-				var err error
-				for try := 0; try < tries; try++ {
-					if err = deleteEKS(ctx, cl, clusterName); err == nil {
-						break
-					}
-					log.Printf("EKS %s delete failed, will retry after sleep...\n", clusterName)
-					time.Sleep(retryInterval)
-					log.Printf("Retrying EKS %s deletion...\n", clusterName)
-				}
-				return err
+var eksNotFoundErr *types.ResourceNotFoundException
 
-			})
-		}
+func ParseEKS(region string, content []byte) ([]dto.Resource, error) {
+	var clusters []struct {
+		Name      string    `json:"name"`
+		CreatedAt time.Time `json:"createdAt"`
 	}
-	return wg.Wait().ErrorOrNil()
+	if err := json.Unmarshal(content, &clusters); err != nil {
+		return nil, err
+	}
+	result := make([]dto.Resource, 0, len(clusters))
+	for _, cluster := range clusters {
+		result = append(result, dto.Resource{
+			Name:     cluster.Name,
+			Location: region,
+			Created:  cluster.CreatedAt,
+		})
+	}
+	return result, nil
 }
 
-func deleteEKS(ctx context.Context, clients *clients, clusterName string) error {
-	log.Printf("Deleting EKS %s...\n", clusterName)
-	//TODO: implement me
+func listEKS(ctx context.Context, client *eks.Client, clusterName string) (*types.Cluster, error) {
+	res, err := client.DescribeCluster(ctx, &eks.DescribeClusterInput{
+		Name: aws.String(clusterName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.Cluster, nil
+}
+
+func deleteEKS(ctx context.Context, client *eks.Client, clusterName string) error {
+	_, err := client.DeleteCluster(ctx, &eks.DeleteClusterInput{
+		Name: aws.String(clusterName),
+	})
+	if err != nil && !errors.As(err, &eksNotFoundErr) {
+		return err
+	}
 	return nil
 }

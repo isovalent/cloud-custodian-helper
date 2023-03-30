@@ -3,15 +3,16 @@ package cleaner
 import (
 	"c7n-helper/pkg/aws"
 	"c7n-helper/pkg/dto"
+	"c7n-helper/pkg/log"
 	"context"
 	"errors"
-	"log"
 	"strings"
 	"time"
 )
 
-func Clean(resourceFile string, tries int, retryInterval time.Duration) error {
-	log.Println("Reading resource file...")
+func Clean(ctx context.Context, resourceFile string, tries int, retryInterval time.Duration) error {
+	logger := log.FromContext(ctx)
+	logger.Info("reading resource file...")
 	var report dto.PolicyReport
 	if err := report.ReadFromFile(resourceFile); err != nil {
 		return err
@@ -19,15 +20,14 @@ func Clean(resourceFile string, tries int, retryInterval time.Duration) error {
 	if strings.ToLower(report.Type) != "eks" {
 		return errors.New("unsupported resource type")
 	}
-	ctx := context.Background()
-	log.Println("Preparing AWS clients...")
+	logger.Info("preparing aws clients...")
 	if err := aws.InitClientsMap(ctx, report.Accounts); err != nil {
 		return err
 	}
-	log.Println("Starting resources deletion...")
-	if err := aws.DeleteClusters(ctx, report.Accounts, tries, retryInterval); err != nil {
+	logger.Info("starting resources cleanup...")
+	if err := aws.DeleteResources(ctx, report.Accounts, tries, retryInterval); err != nil {
 		return err
 	}
-	log.Println("Finished successful!")
+	logger.Info("finished successful")
 	return nil
 }
