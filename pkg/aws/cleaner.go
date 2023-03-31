@@ -4,6 +4,7 @@ import (
 	"c7n-helper/pkg/dto"
 	"c7n-helper/pkg/log"
 	"context"
+	"errors"
 	"github.com/hashicorp/go-multierror"
 	"go.uber.org/multierr"
 	"time"
@@ -21,6 +22,10 @@ func DeleteResources(ctx context.Context, accounts []dto.Account, tries int, ret
 				logger.Info("finding cluster and vpc")
 				cluster, err := listEKS(ctx, cls.EKS, clusterName)
 				if err != nil {
+					if errors.As(err, &eksNotFoundErr) {
+						logger.Info("cluster not found, probably it was deleted previously")
+						return nil
+					}
 					return err
 				}
 				vpcID := *cluster.ResourcesVpcConfig.VpcId
