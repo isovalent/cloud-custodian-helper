@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var logger *zap.SugaredLogger
@@ -30,7 +31,7 @@ func UpdateContext(ctx context.Context, fields ...interface{}) (context.Context,
 }
 
 func init() {
-	l, err := zap.NewDevelopment()
+	l, err := zap.NewDevelopment(zap.WithCaller(false), zap.AddStacktrace(zapcore.FatalLevel))
 	if err != nil {
 		log.Fatal(err)
 	}

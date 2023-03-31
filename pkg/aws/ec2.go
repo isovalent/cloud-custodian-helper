@@ -1,13 +1,14 @@
 package aws
 
 import (
-	"c7n-helper/pkg/dto"
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
+	"c7n-helper/pkg/dto"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"time"
 )
 
 func ParseEC2(region string, content []byte) ([]dto.Resource, error) {

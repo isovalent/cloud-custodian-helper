@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"c7n-helper/pkg/slack"
 	"context"
+
+	"c7n-helper/pkg/log"
+	"c7n-helper/pkg/slack"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var slackCmd = &cobra.Command{
@@ -33,6 +34,6 @@ func init() {
 func notify(_ *cobra.Command, _ []string) {
 	ctx := context.Background()
 	if err := slack.Notify(ctx, *slackResourceFile, *slackToken, *slackChannel, *slackMembersFile, *slackTitle); err != nil {
-		log.Fatal(err.Error())
+		log.FromContext(ctx).Fatal(err)
 	}
 }

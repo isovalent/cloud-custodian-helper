@@ -1,14 +1,15 @@
 package aws
 
 import (
-	"c7n-helper/pkg/dto"
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
+
+	"c7n-helper/pkg/dto"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	"time"
 )
 
 var eksNotFoundErr *types.ResourceNotFoundException

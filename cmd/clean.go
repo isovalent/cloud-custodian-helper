@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"context"
+	"time"
+
 	"c7n-helper/pkg/cleaner"
 	"c7n-helper/pkg/log"
-	"context"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 var cleanCmd = &cobra.Command{

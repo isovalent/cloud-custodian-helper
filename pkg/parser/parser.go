@@ -1,18 +1,20 @@
 package parser
 
 import (
-	"c7n-helper/pkg/aws"
-	"c7n-helper/pkg/azure"
-	"c7n-helper/pkg/dto"
-	"c7n-helper/pkg/gcp"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"c7n-helper/pkg/aws"
+	"c7n-helper/pkg/azure"
+	"c7n-helper/pkg/dto"
+	"c7n-helper/pkg/gcp"
+	"c7n-helper/pkg/log"
 )
 
 var resourceParsers = map[string]func(region string, content []byte) ([]dto.Resource, error){
@@ -23,20 +25,21 @@ var resourceParsers = map[string]func(region string, content []byte) ([]dto.Reso
 	"arg": azure.RG,
 }
 
-func Parse(resourceType, c7nDir, policy, outFile string) error {
-	log.Println("Processing C7N report directory...")
+func Parse(ctx context.Context, resourceType, c7nDir, policy, outFile string) error {
+	logger := log.FromContext(ctx)
+	logger.Info("processing c7n report directory...")
 	files, err := resourceFiles(c7nDir, policy)
 	if err != nil {
 		return err
 	}
-	log.Println("Parsing C7N resource files...")
+	logger.Info("parsing c7n resource files...")
 	report, err := reportFromFiles(files, resourceType, policy)
 	if err != nil {
 		return err
 	}
-	log.Println("Sorting resources...")
+	logger.Info("sorting resources...")
 	sortResources(report.Accounts)
-	log.Println("Persisting JSON report...")
+	logger.Info("persisting report...")
 	return persistReport(report, outFile)
 }
 

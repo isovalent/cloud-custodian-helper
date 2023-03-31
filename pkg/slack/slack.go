@@ -2,17 +2,18 @@ package slack
 
 import (
 	"bytes"
-	"c7n-helper/pkg/dto"
-	"c7n-helper/pkg/log"
 	"context"
 	"fmt"
-	"github.com/lensesio/tableprinter"
-	"github.com/slack-go/slack"
-	"gopkg.in/yaml.v3"
 	"os"
 	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"c7n-helper/pkg/dto"
+	"c7n-helper/pkg/log"
+	"github.com/lensesio/tableprinter"
+	"github.com/slack-go/slack"
+	"gopkg.in/yaml.v3"
 )
 
 const (

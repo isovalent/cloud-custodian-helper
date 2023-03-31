@@ -1,13 +1,14 @@
 package cleaner
 
 import (
-	"c7n-helper/pkg/aws"
-	"c7n-helper/pkg/dto"
-	"c7n-helper/pkg/log"
 	"context"
 	"errors"
 	"strings"
 	"time"
+
+	"c7n-helper/pkg/aws"
+	"c7n-helper/pkg/dto"
+	"c7n-helper/pkg/log"
 )
 
 func Clean(ctx context.Context, resourceFile string, tries int, retryInterval time.Duration) error {
