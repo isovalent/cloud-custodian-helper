@@ -3,9 +3,10 @@ package aws
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
-	"time"
 )
 
 /*

@@ -1,13 +1,14 @@
 package aws
 
 import (
-	"c7n-helper/pkg/dto"
-	"c7n-helper/pkg/log"
 	"context"
 	"errors"
+	"time"
+
+	"c7n-helper/pkg/dto"
+	"c7n-helper/pkg/log"
 	"github.com/hashicorp/go-multierror"
 	"go.uber.org/multierr"
-	"time"
 )
 
 func DeleteResources(ctx context.Context, accounts []dto.Account, tries int, retryInterval time.Duration) error {

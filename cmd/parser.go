@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
+
+	"c7n-helper/pkg/log"
 	"c7n-helper/pkg/parser"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var parserCmd = &cobra.Command{
@@ -30,7 +32,8 @@ func init() {
 }
 
 func parse(_ *cobra.Command, _ []string) {
-	if err := parser.Parse(*parseType, *parseDir, *parsePolicy, *parseResult); err != nil {
-		log.Fatal(err.Error())
+	ctx := context.Background()
+	if err := parser.Parse(ctx, *parseType, *parseDir, *parsePolicy, *parseResult); err != nil {
+		log.FromContext(ctx).Fatal(err)
 	}
 }
