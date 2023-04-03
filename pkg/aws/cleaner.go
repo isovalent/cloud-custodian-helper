@@ -36,7 +36,7 @@ func DeleteResources(ctx context.Context, accounts []dto.Account, tries int, ret
 					if err = deleteVpcAndEks(ctx, cls, vpcID, clusterName); err == nil {
 						break
 					}
-					logger.Warnf("selete failed, will retry after sleep: %s", err.Error())
+					logger.Warnf("delete failed, will retry after sleep: %s", err.Error())
 					time.Sleep(retryInterval)
 				}
 				if err == nil {
