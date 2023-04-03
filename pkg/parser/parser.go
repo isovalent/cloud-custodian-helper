@@ -39,7 +39,7 @@ func Parse(ctx context.Context, resourceType, c7nDir, policy, outFile string) er
 	}
 	logger.Info("sorting resources...")
 	sortResources(report.Accounts)
-	logger.Info("persisting report...")
+	logger.Infof("saving %s...", report.String())
 	return persistReport(report, outFile)
 }
 

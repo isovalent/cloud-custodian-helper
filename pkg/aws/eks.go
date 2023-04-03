@@ -14,10 +14,17 @@ import (
 
 var eksNotFoundErr *types.ResourceNotFoundException
 
+type tags struct {
+	Owner string `json:"owner"`
+}
+
 func ParseEKS(region string, content []byte) ([]dto.Resource, error) {
 	var clusters []struct {
 		Name      string    `json:"name"`
 		CreatedAt time.Time `json:"createdAt"`
+		Tags      tags      `json:"tags"`
+		// the below field is required to avoid conflicts between `tags` and `Tags` because JSON parser is case-insensitive
+		Unused []interface{} `json:"Tags"`
 	}
 	if err := json.Unmarshal(content, &clusters); err != nil {
 		return nil, err
@@ -27,6 +34,7 @@ func ParseEKS(region string, content []byte) ([]dto.Resource, error) {
 		result = append(result, dto.Resource{
 			Name:     cluster.Name,
 			Location: region,
+			Owner:    cluster.Tags.Owner,
 			Created:  cluster.CreatedAt,
 		})
 	}

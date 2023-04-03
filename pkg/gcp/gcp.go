@@ -8,11 +8,16 @@ import (
 	"c7n-helper/pkg/dto"
 )
 
+type labels struct {
+	Owner string `json:"owner"`
+}
+
 func GKE(_ string, content []byte) ([]dto.Resource, error) {
 	var clusters []struct {
 		Name      string    `json:"name"`
 		Location  string    `json:"location"`
 		CreatedAt time.Time `json:"createTime"`
+		Labels    labels    `json:"labels"`
 	}
 	if err := json.Unmarshal(content, &clusters); err != nil {
 		return nil, err
@@ -22,6 +27,7 @@ func GKE(_ string, content []byte) ([]dto.Resource, error) {
 		result = append(result, dto.Resource{
 			Name:     cluster.Name,
 			Location: cluster.Location,
+			Owner:    cluster.Labels.Owner,
 			Created:  cluster.CreatedAt,
 		})
 	}
@@ -33,6 +39,7 @@ func GCE(_ string, content []byte) ([]dto.Resource, error) {
 		Name       string    `json:"name"`
 		Zone       string    `json:"zone"`
 		LaunchTime time.Time `json:"creationTimestamp"`
+		Labels     labels    `json:"labels"`
 	}
 	if err := json.Unmarshal(content, &vms); err != nil {
 		return nil, err
@@ -42,6 +49,7 @@ func GCE(_ string, content []byte) ([]dto.Resource, error) {
 		result = append(result, dto.Resource{
 			Name:     vm.Name,
 			Location: normalizeZone(vm.Zone),
+			Owner:    vm.Labels.Owner,
 			Created:  vm.LaunchTime,
 		})
 	}

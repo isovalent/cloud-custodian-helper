@@ -2,6 +2,7 @@ package dto
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 )
@@ -33,4 +34,8 @@ func (r *PolicyReport) ReadFromFile(reportFile string) error {
 		return err
 	}
 	return nil
+}
+
+func (r *PolicyReport) String() string {
+	return fmt.Sprintf("%s report with %d accounts", r.Type, len(r.Accounts))
 }
