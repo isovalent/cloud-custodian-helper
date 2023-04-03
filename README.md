@@ -42,8 +42,15 @@ $ c7n-helper parse -d <c7n-report-dir> -p <c7n-policy-name> -t <resource-type> -
 
 * Send Slack notification:
 
+If members YAML file specified it will try to find resource owners Slack IDs and send direct message notifications.
+Otherwise, it will send notification in the default SLack channel.
+
 ```console
-$ c7n-helper slack -r <resource-file> -u <slack-webhook-url> -t "<message-title>"
+$ c7n-helper slack -r <resource-file> \
+                   -a <slack-auth-token> \
+                   -m <members-file> \
+                   -c <default-slack-channel-id> \
+                   -t "<message-title>"
 ```
 
 * Clean resources:
