@@ -11,20 +11,34 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
+type kv struct {
+	Key   string `json:"Key"`
+	Value string `json:"Value"`
+}
+
 func ParseEC2(region string, content []byte) ([]dto.Resource, error) {
 	var vms []struct {
 		InstanceId   string    `json:"InstanceId"`
 		LaunchTime   time.Time `json:"LaunchTime"`
 		InstanceType string    `json:"InstanceType"`
+		Tags         []kv      `json:"Tags"`
 	}
 	if err := json.Unmarshal(content, &vms); err != nil {
 		return nil, err
 	}
 	result := make([]dto.Resource, 0, len(vms))
 	for _, vm := range vms {
+		owner := ""
+		for _, tag := range vm.Tags {
+			if tag.Key == "owner" {
+				owner = tag.Value
+				break
+			}
+		}
 		result = append(result, dto.Resource{
 			Name:     fmt.Sprintf("%s [%s]", vm.InstanceId, vm.InstanceType),
 			Location: region,
+			Owner:    owner,
 			Created:  vm.LaunchTime,
 		})
 	}

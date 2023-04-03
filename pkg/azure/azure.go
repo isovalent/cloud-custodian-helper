@@ -8,7 +8,7 @@ import (
 )
 
 type tags struct {
-	Expiry string `json:"expiry"`
+	Owner string `json:"owner"`
 }
 
 func RG(_ string, content []byte) ([]dto.Resource, error) {
@@ -22,14 +22,11 @@ func RG(_ string, content []byte) ([]dto.Resource, error) {
 	}
 	result := make([]dto.Resource, 0, len(groups))
 	for _, group := range groups {
-		created, err := time.Parse("2006-01-02 15:04:05", group.Tags.Expiry)
-		if err != nil {
-			created = time.Now()
-		}
 		result = append(result, dto.Resource{
 			Name:     group.Name,
 			Location: group.Location,
-			Created:  created,
+			Owner:    group.Tags.Owner,
+			Created:  time.Now(),
 		})
 	}
 	return result, nil
