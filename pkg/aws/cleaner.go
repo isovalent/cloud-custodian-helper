@@ -32,12 +32,14 @@ func DeleteResources(ctx context.Context, accounts []dto.Account, tries int, ret
 				vpcID := *cluster.ResourcesVpcConfig.VpcId
 				ctx, logger = log.UpdateContext(ctx, "vpc", vpcID)
 				for try := 1; try <= tries; try++ {
+					if try > 1 {
+						logger.Warnf("delete failed, will retry after sleep: %s", err.Error())
+						time.Sleep(retryInterval)
+					}
 					logger.Infof("starting delete process [attempt: %d]", try)
 					if err = deleteVpcAndEks(ctx, cls, vpcID, clusterName); err == nil {
 						break
 					}
-					logger.Warnf("delete failed, will retry after sleep: %s", err.Error())
-					time.Sleep(retryInterval)
 				}
 				if err == nil {
 					logger.Info("deleting cluster")
