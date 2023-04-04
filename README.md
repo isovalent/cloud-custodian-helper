@@ -53,6 +53,14 @@ $ c7n-helper slack -r <resource-file> \
                    -t "<message-title>"
 ```
 
+YAML file structure example:
+```yaml
+members:
+  <member-name>:
+    slackID: <slack-id>
+...
+```
+
 * Clean resources:
 
 ```console
