@@ -42,8 +42,19 @@ $ c7n-helper parse -d <c7n-report-dir> -p <c7n-policy-name> -t <resource-type> -
 
 * Send Slack notification:
 
-If members YAML file specified it will try to find resource owners Slack IDs and send direct message notifications.
-Otherwise, it will send notification in the default SLack channel.
+Uses `owner` resource tag that can be:
+ * Email: then `GetUserByEmail` slack API will be called to get slack user ID and send direct notification.
+ * GitHub nickname: then `members` file will be used (if provided) to lookup slack user ID and send direct notification.
+
+Members YAML file structure:
+```yaml
+members:
+  <member-name>:
+    slackID: <slack-id>
+...
+```
+
+If `owner` resource tag is empty or invalid slack notification will be sent in the default Slack channel.
 
 ```console
 $ c7n-helper slack -r <resource-file> \
@@ -51,14 +62,6 @@ $ c7n-helper slack -r <resource-file> \
                    -m <members-file> \
                    -c <default-slack-channel-id> \
                    -t "<message-title>"
-```
-
-YAML file structure example:
-```yaml
-members:
-  <member-name>:
-    slackID: <slack-id>
-...
 ```
 
 * Clean resources:
