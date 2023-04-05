@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/mail"
 	"os"
 	"sort"
 	"strings"
@@ -41,17 +42,20 @@ func Notify(ctx context.Context, resourceFile, slackToken, slackDefaultChannel, 
 	}
 	slackClient := slack.New(slackToken)
 	logger.Info("reading slack members file...")
-	slackMembers, err := readSlackMembers(ctx, membersFile, slackClient)
+	userSlackID, err := readSlackMembers(ctx, membersFile, slackClient)
 	if err != nil {
 		return err
 	}
+	logger.Info("reading slack ids by emails...")
+	emailSlackID := readSlackIDByEmail(ctx, report.Accounts, slackClient)
 	logger.Info("preparing slack messages...")
-	slackGroups := groupSlackMessage(report.Accounts, slackMembers, slackDefaultChannel)
+	slackGroups := groupSlackMessage(report.Accounts, emailSlackID, userSlackID, slackDefaultChannel)
 	channelMessages := prepareSlackMessage(slackGroups)
 	logger.Info("sending slack notification...")
 	return notifySlack(ctx, slackClient, title, channelMessages)
 }
 
+// Returns map: username -> slackID
 func readSlackMembers(ctx context.Context, file string, client *slack.Client) (map[string]string, error) {
 	if file == "" {
 		return nil, nil
@@ -84,15 +88,35 @@ func readSlackMembers(ctx context.Context, file string, client *slack.Client) (m
 	return result, nil
 }
 
+// Returns map: email -> slackID
+func readSlackIDByEmail(ctx context.Context, accounts []dto.Account, client *slack.Client) map[string]string {
+	emails := make(map[string]string)
+	for _, account := range accounts {
+		for _, resource := range account.Resources {
+			email := strings.ToLower(resource.Owner)
+			if _, err := mail.ParseAddress(email); err != nil {
+				log.FromContext(ctx).Errorf("invalid email address: %s", email)
+				continue
+			}
+			if _, ok := emails[email]; !ok {
+				user, err := client.GetUserByEmailContext(ctx, email)
+				if err != nil {
+					log.FromContext(ctx).Errorf("unable to get slack user [%s]: %s", email, err.Error())
+					continue
+				}
+				emails[email] = user.ID
+			}
+		}
+	}
+	return emails
+}
+
 // Groups Slack messages: SlackChannelID -> Account|Project|Subscription -> []Resources
-func groupSlackMessage(accounts []dto.Account, slackMembers map[string]string, defaultChannel string) map[string]map[string][]dto.Resource {
+func groupSlackMessage(accounts []dto.Account, emailSlackID, userSlackID map[string]string, defaultChannel string) map[string]map[string][]dto.Resource {
 	groups := make(map[string]map[string][]dto.Resource)
 	for _, account := range accounts {
 		for _, resource := range account.Resources {
-			channel, ok := slackMembers[strings.ToLower(resource.Owner)]
-			if !ok {
-				channel = defaultChannel
-			}
+			channel := lookupSlackID(resource.Owner, emailSlackID, userSlackID, defaultChannel)
 			accountResources, ok := groups[channel]
 			if !ok {
 				accountResources = make(map[string][]dto.Resource)
@@ -105,6 +129,19 @@ func groupSlackMessage(accounts []dto.Account, slackMembers map[string]string, d
 		}
 	}
 	return groups
+}
+
+func lookupSlackID(owner string, emailSlackID, userSlackID map[string]string, defaultSlackID string) string {
+	owner = strings.ToLower(owner)
+	id, ok := emailSlackID[owner]
+	if ok {
+		return id
+	}
+	id, ok = userSlackID[owner]
+	if ok {
+		return id
+	}
+	return defaultSlackID
 }
 
 func prepareSlackMessage(groups map[string]map[string][]dto.Resource) map[string][]string {
