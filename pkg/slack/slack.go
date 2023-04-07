@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	maxSlackMessageLength = 3_000
+	maxSlackMessageLength = 3_750
 	splitMessageThreshold = maxSlackMessageLength - maxSlackMessageLength/5
 )
 
@@ -93,6 +93,9 @@ func readSlackIDByEmail(ctx context.Context, accounts []dto.Account, client *sla
 	emails := make(map[string]string)
 	for _, account := range accounts {
 		for _, resource := range account.Resources {
+			if resource.Owner == "" {
+				continue
+			}
 			email := strings.ToLower(resource.Owner)
 			if _, err := mail.ParseAddress(email); err != nil {
 				log.FromContext(ctx).Errorf("invalid email address: %s", email)
@@ -149,14 +152,14 @@ func prepareSlackMessage(groups map[string]map[string][]dto.Resource) map[string
 	for channel, accountResources := range groups {
 		channelMessages[channel] = make([]string, 0)
 		for account, resources := range accountResources {
+			channelMessages[channel] = append(channelMessages[channel], fmt.Sprintf("*%s*\n", account))
 			sort.Slice(resources, func(i, j int) bool {
 				return resources[i].Created.Before(resources[j].Created)
 			})
 			buf := bytes.NewBufferString("")
 			tableprinter.Print(buf, normalizeDTO(resources))
 			for _, message := range splitMessage(buf.String()) {
-				payload := fmt.Sprintf("*%s*\n```\n%s```\n", account, message)
-				channelMessages[channel] = append(channelMessages[channel], payload)
+				channelMessages[channel] = append(channelMessages[channel], fmt.Sprintf("```\n%s```\n", message))
 			}
 		}
 	}
@@ -182,6 +185,9 @@ func splitMessage(message string) []string {
 		builder := strings.Builder{}
 		lines := strings.Split(message, "\n")
 		for _, line := range lines {
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
 			builder.WriteString(line + "\n")
 			if utf8.RuneCountInString(builder.String()) > splitMessageThreshold {
 				messages = append(messages, builder.String())
