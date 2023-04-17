@@ -43,23 +43,18 @@ $ c7n-helper parse -d <c7n-report-dir> -p <c7n-policy-name> -t <resource-type> -
 * Send Slack notification:
 
 Uses `owner` resource tag that can be:
- * Email: then `GetUserByEmail` slack API will be called to get slack user ID and send direct notification.
- * GitHub nickname: then `members` file will be used (if provided) to lookup slack user ID and send direct notification.
+ * Email
+ * Slack display name (` ` or `.` characters can be replaced with `-`, relevant for GCP label)
+ * Slack real name (` ` or `.` characters can be replaced with `-`, relevant for GCP label)
+ * Slack last name
+ * Slack user ID (can be in lower case, relevant for GCP label)
+ * Slack channel ID (can be in lower case, relevant for GCP label)
 
-Members YAML file structure:
-```yaml
-members:
-  <member-name>:
-    slackID: <slack-id>
-...
-```
-
-If `owner` resource tag is empty or invalid slack notification will be sent in the default Slack channel.
+If `owner` resource tag is empty or invalid slack notification will be sent to the default Slack channel.
 
 ```console
 $ c7n-helper slack -r <resource-file> \
                    -a <slack-auth-token> \
-                   -m <members-file> \
                    -c <default-slack-channel-id> \
                    -t "<message-title>"
 ```

@@ -1,182 +1,124 @@
 package slack
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"net/mail"
-	"os"
-	"sort"
 	"strings"
 	"unicode/utf8"
 
-	"c7n-helper/pkg/dto"
-	"c7n-helper/pkg/log"
-	"github.com/lensesio/tableprinter"
 	"github.com/slack-go/slack"
-	"gopkg.in/yaml.v3"
 )
 
 const (
+	slackUsersLimit       = 10_000
 	maxSlackMessageLength = 3_750
 	splitMessageThreshold = maxSlackMessageLength - maxSlackMessageLength/5
 )
 
-type msgLine struct {
-	Index   int    `header:"#"`
-	Region  string `header:"Region"`
-	Name    string `header:"Name"`
-	Created string `header:"Created date"`
+type slackProvider struct {
+	client                   *slack.Client
+	title                    string
+	defaultChannel           string
+	slackIDs                 map[string]struct{}
+	emailSlackID             map[string]string
+	realNameSlackID          map[string]string
+	normalRealNameSlackID    map[string]string
+	displayNameSlackID       map[string]string
+	normalDisplayNameSlackID map[string]string
+	lastNameSlackID          map[string]string
 }
 
-func Notify(ctx context.Context, resourceFile, slackToken, slackDefaultChannel, membersFile, title string) error {
-	logger := log.FromContext(ctx)
-	logger.Info("reading resource file...")
-	var report dto.PolicyReport
-	if err := report.ReadFromFile(resourceFile); err != nil {
-		return err
+func newSlackProvider(token, title, defaultChannel string) *slackProvider {
+	return &slackProvider{
+		client:                   slack.New(token),
+		title:                    title,
+		defaultChannel:           defaultChannel,
+		slackIDs:                 make(map[string]struct{}),
+		emailSlackID:             make(map[string]string),
+		realNameSlackID:          make(map[string]string),
+		normalRealNameSlackID:    make(map[string]string),
+		displayNameSlackID:       make(map[string]string),
+		normalDisplayNameSlackID: make(map[string]string),
+		lastNameSlackID:          make(map[string]string),
 	}
-	if len(report.Accounts) == 0 {
-		logger.Info("nothing to send")
-		return nil
-	}
-	slackClient := slack.New(slackToken)
-	logger.Info("reading slack members file...")
-	userSlackID, err := readSlackMembers(ctx, membersFile, slackClient)
+}
+func (s *slackProvider) readUsers(ctx context.Context) error {
+	users, err := s.client.GetUsersContext(ctx, slack.GetUsersOptionLimit(slackUsersLimit))
 	if err != nil {
 		return err
 	}
-	logger.Info("reading slack ids by emails...")
-	emailSlackID := readSlackIDByEmail(ctx, report.Accounts, slackClient)
-	logger.Info("preparing slack messages...")
-	slackGroups := groupSlackMessage(report.Accounts, emailSlackID, userSlackID, slackDefaultChannel)
-	channelMessages := prepareSlackMessage(slackGroups)
-	logger.Info("sending slack notification...")
-	return notifySlack(ctx, slackClient, title, channelMessages)
-}
-
-// Returns map: username -> slackID
-func readSlackMembers(ctx context.Context, file string, client *slack.Client) (map[string]string, error) {
-	if file == "" {
-		return nil, nil
-	}
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-	var rawData map[string]interface{}
-	if err := yaml.Unmarshal(data, &rawData); err != nil {
-		return nil, err
-	}
-	if len(rawData) == 0 {
-		return nil, nil
-	}
-	members := rawData["members"].(map[string]interface{})
-	result := make(map[string]string)
-	for name := range members {
-		member := members[name].(map[string]interface{})
-		if id, ok := member["slackID"]; ok {
-			slackID := id.(string)
-			// Filter out not existed users
-			if _, err := client.GetUserInfo(slackID); err != nil {
-				log.FromContext(ctx).Errorf("slack user [%s] not found: %s", slackID, err.Error())
-				continue
-			}
-			result[strings.ToLower(name)] = id.(string)
+	for _, u := range users {
+		s.slackIDs[u.ID] = struct{}{}
+		profile := u.Profile
+		if profile.Email != "" {
+			s.emailSlackID[strings.ToLower(profile.Email)] = u.ID
+		}
+		if profile.RealNameNormalized != "" {
+			name := strings.ToLower(profile.RealNameNormalized)
+			s.realNameSlackID[name] = u.ID
+			s.normalRealNameSlackID[normalizeName(name)] = u.ID
+		}
+		if profile.DisplayNameNormalized != "" {
+			name := strings.ToLower(profile.DisplayNameNormalized)
+			s.displayNameSlackID[name] = u.ID
+			s.normalDisplayNameSlackID[normalizeName(name)] = u.ID
+		}
+		if profile.LastName != "" {
+			s.lastNameSlackID[strings.ToLower(profile.LastName)] = u.ID
 		}
 	}
-	return result, nil
+	return nil
 }
 
-// Returns map: email -> slackID
-func readSlackIDByEmail(ctx context.Context, accounts []dto.Account, client *slack.Client) map[string]string {
-	emails := make(map[string]string)
-	for _, account := range accounts {
-		for _, resource := range account.Resources {
-			if resource.Owner == "" {
-				continue
-			}
-			email := strings.ToLower(resource.Owner)
-			if _, err := mail.ParseAddress(email); err != nil {
-				log.FromContext(ctx).Errorf("invalid email address: %s", email)
-				continue
-			}
-			if _, ok := emails[email]; !ok {
-				user, err := client.GetUserByEmailContext(ctx, email)
-				if err != nil {
-					log.FromContext(ctx).Errorf("unable to get slack user [%s]: %s", email, err.Error())
-					continue
-				}
-				emails[email] = user.ID
-			}
-		}
+func (s *slackProvider) getSlackIDByOwner(owner string) string {
+	if _, ok := s.slackIDs[strings.ToUpper(owner)]; ok {
+		return strings.ToUpper(owner)
 	}
-	return emails
-}
-
-// Groups Slack messages: SlackChannelID -> Account|Project|Subscription -> []Resources
-func groupSlackMessage(accounts []dto.Account, emailSlackID, userSlackID map[string]string, defaultChannel string) map[string]map[string][]dto.Resource {
-	groups := make(map[string]map[string][]dto.Resource)
-	for _, account := range accounts {
-		for _, resource := range account.Resources {
-			channel := lookupSlackID(resource.Owner, emailSlackID, userSlackID, defaultChannel)
-			accountResources, ok := groups[channel]
-			if !ok {
-				accountResources = make(map[string][]dto.Resource)
-				groups[channel] = accountResources
-			}
-			if _, ok := accountResources[account.Name]; !ok {
-				accountResources[account.Name] = make([]dto.Resource, 0)
-			}
-			accountResources[account.Name] = append(accountResources[account.Name], resource)
-		}
-	}
-	return groups
-}
-
-func lookupSlackID(owner string, emailSlackID, userSlackID map[string]string, defaultSlackID string) string {
 	owner = strings.ToLower(owner)
-	id, ok := emailSlackID[owner]
-	if ok {
+	if _, err := mail.ParseAddress(owner); err == nil {
+		return s.emailSlackID[owner]
+	}
+	if id, ok := s.displayNameSlackID[owner]; ok {
 		return id
 	}
-	id, ok = userSlackID[owner]
-	if ok {
+	if id, ok := s.normalDisplayNameSlackID[owner]; ok {
 		return id
 	}
-	return defaultSlackID
+	if id, ok := s.lastNameSlackID[owner]; ok {
+		return id
+	}
+	if id, ok := s.realNameSlackID[owner]; ok {
+		return id
+	}
+	if id, ok := s.normalRealNameSlackID[owner]; ok {
+		return id
+	}
+	return s.defaultChannel
 }
 
-func prepareSlackMessage(groups map[string]map[string][]dto.Resource) map[string][]string {
-	channelMessages := make(map[string][]string)
-	for channel, accountResources := range groups {
-		channelMessages[channel] = make([]string, 0)
-		for account, resources := range accountResources {
-			channelMessages[channel] = append(channelMessages[channel], fmt.Sprintf("*%s*\n", account))
-			sort.Slice(resources, func(i, j int) bool {
-				return resources[i].Created.Before(resources[j].Created)
-			})
-			buf := bytes.NewBufferString("")
-			tableprinter.Print(buf, normalizeDTO(resources))
-			for _, message := range splitMessage(buf.String()) {
-				channelMessages[channel] = append(channelMessages[channel], fmt.Sprintf("```\n%s```\n", message))
+func (s *slackProvider) notify(ctx context.Context, channelMessages map[string][]string) error {
+	var header *slack.HeaderBlock
+	if s.title != "" {
+		header = &slack.HeaderBlock{
+			Type: slack.MBTHeader,
+			Text: slack.NewTextBlockObject(slack.PlainTextType, s.title, false, false),
+		}
+	}
+	for channel, messages := range channelMessages {
+		if header != nil {
+			_, _, _, err := s.client.SendMessageContext(ctx, channel, slack.MsgOptionBlocks(header))
+			if err != nil {
+				return err
+			}
+		}
+		for _, message := range messages {
+			_, _, _, err := s.client.SendMessageContext(ctx, channel, slack.MsgOptionText(message, false))
+			if err != nil {
+				return err
 			}
 		}
 	}
-	return channelMessages
-}
-
-func normalizeDTO(resources []dto.Resource) []msgLine {
-	result := make([]msgLine, 0, len(resources))
-	for i, r := range resources {
-		result = append(result, msgLine{
-			Index:   i + 1,
-			Region:  r.Location,
-			Name:    r.Name,
-			Created: r.Created.Format("2006-01-02"),
-		})
-	}
-	return result
+	return nil
 }
 
 func splitMessage(message string) []string {
@@ -202,27 +144,8 @@ func splitMessage(message string) []string {
 	return []string{message}
 }
 
-func notifySlack(ctx context.Context, client *slack.Client, title string, channelMessages map[string][]string) error {
-	var header *slack.HeaderBlock
-	if title != "" {
-		header = &slack.HeaderBlock{
-			Type: slack.MBTHeader,
-			Text: slack.NewTextBlockObject(slack.PlainTextType, title, false, false),
-		}
-	}
-	for channel, messages := range channelMessages {
-		if header != nil {
-			_, _, _, err := client.SendMessageContext(ctx, channel, slack.MsgOptionBlocks(header))
-			if err != nil {
-				return err
-			}
-		}
-		for _, message := range messages {
-			_, _, _, err := client.SendMessageContext(ctx, channel, slack.MsgOptionText(message, false))
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+func normalizeName(name string) string {
+	name = strings.ToLower(name)
+	name = strings.ReplaceAll(name, " ", "-")
+	return strings.ReplaceAll(name, ".", "-")
 }
