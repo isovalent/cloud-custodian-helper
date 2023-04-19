@@ -20,6 +20,7 @@ import (
 var resourceParsers = map[string]func(region string, content []byte) ([]dto.Resource, error){
 	"eks": aws.ParseEKS,
 	"ec2": aws.ParseEC2,
+	"s3":  aws.ParseS3,
 	"gke": gcp.GKE,
 	"gce": gcp.GCE,
 	"arg": azure.RG,
@@ -33,7 +34,7 @@ func Parse(ctx context.Context, resourceType, c7nDir, policy, outFile string) er
 		return err
 	}
 	logger.Info("parsing c7n resource files...")
-	report, err := reportFromFiles(files, resourceType, policy)
+	report, err := reportFromFiles(ctx, files, resourceType, policy)
 	if err != nil {
 		return err
 	}
@@ -57,11 +58,11 @@ func resourceFiles(c7nDir, policy string) ([]string, error) {
 	return files, err
 }
 
-func reportFromFiles(files []string, resourceType, policy string) (dto.PolicyReport, error) {
+func reportFromFiles(ctx context.Context, files []string, resourceType, policy string) (dto.PolicyReport, error) {
 	accountMap := make(map[string]dto.Account)
 	for _, file := range files {
 		accName, region := accountRegion(file)
-		resources, err := resourcesFromFile(resourceType, region, file)
+		resources, err := resourcesFromFile(ctx, resourceType, region, file)
 		if err != nil {
 			return dto.PolicyReport{}, err
 		}
@@ -91,12 +92,12 @@ func sortResources(accounts []dto.Account) {
 	}
 }
 
-func resourcesFromFile(resourceType, region, file string) ([]dto.Resource, error) {
+func resourcesFromFile(ctx context.Context, resourceType, region, file string) ([]dto.Resource, error) {
 	parser, ok := resourceParsers[resourceType]
 	if !ok {
 		return nil, errors.New("unsupported resource type")
 	}
-	content, err := jsonToBytes(file)
+	content, err := jsonToBytes(ctx, file)
 	if err != nil {
 		return nil, err
 	}
@@ -126,11 +127,15 @@ func accountRegion(file string) (string, string) {
 	return parts[l-4] /* account */, parts[l-3] /* region */
 }
 
-func jsonToBytes(file string) ([]byte, error) {
+func jsonToBytes(ctx context.Context, file string) ([]byte, error) {
 	jsonFile, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
-	defer jsonFile.Close()
+	defer func() {
+		if err := jsonFile.Close(); err != nil {
+			log.FromContext(ctx).Errorf("unable to close json file: %s", err.Error())
+		}
+	}()
 	return io.ReadAll(jsonFile)
 }

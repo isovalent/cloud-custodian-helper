@@ -19,7 +19,7 @@ var parserCmd = &cobra.Command{
 var parseType, parseDir, parsePolicy, parseResult *string
 
 func init() {
-	parseType = parserCmd.Flags().StringP("type", "t", "", "Cloud resource type (eks, ec2, gke, gce, arg)")
+	parseType = parserCmd.Flags().StringP("type", "t", "", "Cloud resource type (eks, ec2, s3, gke, gce, arg)")
 	_ = parserCmd.MarkFlagRequired("type")
 	parseDir = parserCmd.Flags().StringP("report-dir", "d", "", "C7N report directory")
 	_ = parserCmd.MarkFlagRequired("report-dir")
