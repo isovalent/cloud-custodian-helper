@@ -11,17 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
-type kv struct {
-	Key   string `json:"Key"`
-	Value string `json:"Value"`
-}
-
 func ParseEC2(region string, content []byte) ([]dto.Resource, error) {
 	var vms []struct {
-		InstanceId   string    `json:"InstanceId"`
-		LaunchTime   time.Time `json:"LaunchTime"`
-		InstanceType string    `json:"InstanceType"`
-		Tags         []kv      `json:"Tags"`
+		InstanceId   string     `json:"InstanceId"`
+		LaunchTime   time.Time  `json:"LaunchTime"`
+		InstanceType string     `json:"InstanceType"`
+		Tags         []keyValue `json:"Tags"`
 	}
 	if err := json.Unmarshal(content, &vms); err != nil {
 		return nil, err
