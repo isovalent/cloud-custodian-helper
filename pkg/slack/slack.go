@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/mail"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/slack-go/slack"
@@ -116,6 +117,7 @@ func (s *slackProvider) notify(ctx context.Context, channelMessages map[string][
 			if err != nil {
 				return err
 			}
+			time.Sleep(time.Millisecond * 150) // pause to avoid slack rate limits
 		}
 	}
 	return nil
