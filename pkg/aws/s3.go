@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"c7n-helper/pkg/date"
 	"c7n-helper/pkg/dto"
 )
 
@@ -28,11 +29,13 @@ func ParseS3(region string, content []byte) ([]dto.Resource, error) {
 			// skip buckets from another regions
 			continue
 		}
-		owner := ""
+		owner, expiry := "", ""
 		for _, tag := range bucket.Tags {
 			if tag.Key == "owner" {
 				owner = tag.Value
-				break
+			}
+			if tag.Key == "expiry" {
+				expiry = tag.Value
 			}
 		}
 		result = append(result, dto.Resource{
@@ -40,6 +43,7 @@ func ParseS3(region string, content []byte) ([]dto.Resource, error) {
 			Location: region,
 			Owner:    owner,
 			Created:  bucket.CreatedAt,
+			Expiry:   date.ParseOrDefault(expiry, time.Now()),
 		})
 	}
 	return result, nil

@@ -15,9 +15,9 @@ require (
 	github.com/lensesio/tableprinter v0.0.0-20201125135848-89e81fc956e7
 	github.com/slack-go/slack v0.12.1
 	github.com/spf13/cobra v1.6.1
+	github.com/stretchr/testify v1.8.0
 	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.24.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -30,6 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.12.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.7 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
@@ -37,7 +38,9 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kataras/tablewriter v0.0.0-20180708051242-e063d29b7c23 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"c7n-helper/pkg/date"
 	"c7n-helper/pkg/dto"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -23,11 +24,13 @@ func ParseEC2(region string, content []byte) ([]dto.Resource, error) {
 	}
 	result := make([]dto.Resource, 0, len(vms))
 	for _, vm := range vms {
-		owner := ""
+		owner, expiry := "", ""
 		for _, tag := range vm.Tags {
 			if tag.Key == "owner" {
 				owner = tag.Value
-				break
+			}
+			if tag.Key == "expiry" {
+				expiry = tag.Value
 			}
 		}
 		result = append(result, dto.Resource{
@@ -35,6 +38,7 @@ func ParseEC2(region string, content []byte) ([]dto.Resource, error) {
 			Location: region,
 			Owner:    owner,
 			Created:  vm.LaunchTime,
+			Expiry:   date.ParseOrDefault(expiry, time.Now()),
 		})
 	}
 	return result, nil

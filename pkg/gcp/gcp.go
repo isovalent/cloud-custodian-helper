@@ -5,11 +5,15 @@ import (
 	"strings"
 	"time"
 
+	"c7n-helper/pkg/date"
 	"c7n-helper/pkg/dto"
 )
 
+const ttl = time.Hour * 24 * 10 // 10 days
+
 type labels struct {
-	Owner string `json:"owner"`
+	Owner  string `json:"owner"`
+	Expiry string `json:"expiry"`
 }
 
 func GKE(_ string, content []byte) ([]dto.Resource, error) {
@@ -29,6 +33,7 @@ func GKE(_ string, content []byte) ([]dto.Resource, error) {
 			Location: cluster.Location,
 			Owner:    cluster.Labels.Owner,
 			Created:  cluster.CreatedAt,
+			Expiry:   date.ParseOrDefault(cluster.Labels.Expiry, cluster.CreatedAt.Add(ttl)),
 		})
 	}
 	return result, nil
@@ -51,6 +56,7 @@ func GCE(_ string, content []byte) ([]dto.Resource, error) {
 			Location: normalizeZone(vm.Zone),
 			Owner:    vm.Labels.Owner,
 			Created:  vm.LaunchTime,
+			Expiry:   date.ParseOrDefault(vm.Labels.Expiry, vm.LaunchTime.Add(ttl)),
 		})
 	}
 	return result, nil

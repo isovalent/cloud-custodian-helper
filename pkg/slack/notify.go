@@ -16,6 +16,7 @@ type msgLine struct {
 	Region  string `header:"Region"`
 	Name    string `header:"Name"`
 	Created string `header:"Created date"`
+	Expiry  string `header:"Expiry date"`
 }
 
 func Notify(ctx context.Context, resourceFile, slackToken, slackDefaultChannel, title string) error {
@@ -87,6 +88,7 @@ func normalizeDTO(resources []dto.Resource) []msgLine {
 			Region:  r.Location,
 			Name:    r.Name,
 			Created: r.Created.Format("2006-01-02"),
+			Expiry:  r.Expiry.Format("2006-01-02"),
 		})
 	}
 	return result
