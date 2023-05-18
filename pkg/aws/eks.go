@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"c7n-helper/pkg/date"
 	"c7n-helper/pkg/dto"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
@@ -15,7 +16,8 @@ import (
 var eksNotFoundErr *types.ResourceNotFoundException
 
 type tags struct {
-	Owner string `json:"owner"`
+	Owner  string `json:"owner"`
+	Expiry string `json:"expiry"`
 }
 
 func ParseEKS(region string, content []byte) ([]dto.Resource, error) {
@@ -36,6 +38,7 @@ func ParseEKS(region string, content []byte) ([]dto.Resource, error) {
 			Location: region,
 			Owner:    cluster.Tags.Owner,
 			Created:  cluster.CreatedAt,
+			Expiry:   date.ParseOrDefault(cluster.Tags.Expiry, time.Now()),
 		})
 	}
 	return result, nil

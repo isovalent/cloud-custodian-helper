@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"time"
 
+	"c7n-helper/pkg/date"
 	"c7n-helper/pkg/dto"
 )
 
 type tags struct {
 	Owner   string `json:"owner"`
 	Created string `json:"created"`
+	Expiry  string `json:"expiry"`
 }
 
 func RG(_ string, content []byte) ([]dto.Resource, error) {
@@ -27,18 +29,9 @@ func RG(_ string, content []byte) ([]dto.Resource, error) {
 			Name:     group.Name,
 			Location: group.Location,
 			Owner:    group.Tags.Owner,
-			Created:  parseDate(group.Tags.Created),
+			Created:  date.ParseOrDefault(group.Tags.Created, time.Now()),
+			Expiry:   date.ParseOrDefault(group.Tags.Expiry, time.Now()),
 		})
 	}
 	return result, nil
-}
-
-func parseDate(s string) time.Time {
-	if t, err := time.Parse("2006-01-02", s); err == nil {
-		return t
-	}
-	if t, err := time.Parse("2006-01-02 15:04:05", s); err == nil {
-		return t
-	}
-	return time.Now()
 }

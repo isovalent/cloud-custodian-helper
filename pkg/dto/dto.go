@@ -23,6 +23,7 @@ type Resource struct {
 	Location string    `json:"location"`
 	Owner    string    `json:"owner"`
 	Created  time.Time `json:"created"`
+	Expiry   time.Time `json:"expiry"`
 }
 
 func (r *PolicyReport) ReadFromFile(reportFile string) error {
