@@ -35,6 +35,10 @@ func Notify(ctx context.Context, resourceFile, slackToken, slackDefaultChannel, 
 	if err := slack.readUsers(ctx); err != nil {
 		return err
 	}
+	logger.Info("reading slack channels...")
+	if err := slack.readChannels(ctx); err != nil {
+		return err
+	}
 	logger.Info("preparing slack messages...")
 	channelMessages := prepareSlackMessage(groupSlackMessage(report.Accounts, slack))
 	logger.Info("sending slack notification...")

@@ -12,6 +12,7 @@ import (
 
 const (
 	slackUsersLimit       = 10_000
+	slackChannelsLimit    = 10_000
 	maxSlackMessageLength = 3_750
 	splitMessageThreshold = maxSlackMessageLength - maxSlackMessageLength/5
 )
@@ -21,6 +22,8 @@ type slackProvider struct {
 	title                    string
 	defaultChannel           string
 	slackIDs                 map[string]struct{}
+	slackChannelIDs          map[string]struct{}
+	channelSlackID           map[string]string
 	emailSlackID             map[string]string
 	realNameSlackID          map[string]string
 	normalRealNameSlackID    map[string]string
@@ -35,6 +38,8 @@ func newSlackProvider(token, title, defaultChannel string) *slackProvider {
 		title:                    title,
 		defaultChannel:           defaultChannel,
 		slackIDs:                 make(map[string]struct{}),
+		slackChannelIDs:          make(map[string]struct{}),
+		channelSlackID:           make(map[string]string),
 		emailSlackID:             make(map[string]string),
 		realNameSlackID:          make(map[string]string),
 		normalRealNameSlackID:    make(map[string]string),
@@ -43,6 +48,7 @@ func newSlackProvider(token, title, defaultChannel string) *slackProvider {
 		lastNameSlackID:          make(map[string]string),
 	}
 }
+
 func (s *slackProvider) readUsers(ctx context.Context) error {
 	users, err := s.client.GetUsersContext(ctx, slack.GetUsersOptionLimit(slackUsersLimit))
 	if err != nil {
@@ -71,13 +77,50 @@ func (s *slackProvider) readUsers(ctx context.Context) error {
 	return nil
 }
 
+func (s *slackProvider) readChannels(ctx context.Context) error {
+	var (
+		channels []slack.Channel
+		cursor   string
+		err      error
+	)
+	for {
+		params := &slack.GetConversationsParameters{
+			Cursor:          cursor,
+			ExcludeArchived: true,
+			Limit:           slackChannelsLimit,
+			Types:           []string{"public_channel"},
+		}
+		channels, cursor, err = s.client.GetConversationsContext(ctx, params)
+		if err != nil {
+			return err
+		}
+		for _, c := range channels {
+			if !c.IsChannel {
+				continue
+			}
+			s.slackChannelIDs[c.Conversation.ID] = struct{}{}
+			s.channelSlackID[strings.ToLower(c.Conversation.NameNormalized)] = c.Conversation.ID
+		}
+		if cursor == "" {
+			break
+		}
+	}
+	return nil
+}
+
 func (s *slackProvider) getSlackIDByOwner(owner string) string {
 	if _, ok := s.slackIDs[strings.ToUpper(owner)]; ok {
+		return strings.ToUpper(owner)
+	}
+	if _, ok := s.slackChannelIDs[strings.ToUpper(owner)]; ok {
 		return strings.ToUpper(owner)
 	}
 	owner = strings.ToLower(owner)
 	if _, err := mail.ParseAddress(owner); err == nil {
 		return s.emailSlackID[owner]
+	}
+	if id, ok := s.channelSlackID[owner]; ok {
+		return id
 	}
 	if id, ok := s.displayNameSlackID[owner]; ok {
 		return id
