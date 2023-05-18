@@ -98,16 +98,9 @@ func (s *slackProvider) getSlackIDByOwner(owner string) string {
 }
 
 func (s *slackProvider) notify(ctx context.Context, channelMessages map[string][]string) error {
-	var header *slack.HeaderBlock
-	if s.title != "" {
-		header = &slack.HeaderBlock{
-			Type: slack.MBTHeader,
-			Text: slack.NewTextBlockObject(slack.PlainTextType, s.title, false, false),
-		}
-	}
 	for channel, messages := range channelMessages {
-		if header != nil {
-			_, _, _, err := s.client.SendMessageContext(ctx, channel, slack.MsgOptionBlocks(header))
+		if s.title != "" {
+			_, _, _, err := s.client.SendMessageContext(ctx, channel, slack.MsgOptionText(s.title, false))
 			if err != nil {
 				return err
 			}
