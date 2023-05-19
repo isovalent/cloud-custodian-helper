@@ -2,6 +2,7 @@ package aws
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"c7n-helper/pkg/date"
@@ -31,10 +32,10 @@ func ParseS3(region string, content []byte) ([]dto.Resource, error) {
 		}
 		owner, expiry := "", ""
 		for _, tag := range bucket.Tags {
-			if tag.Key == "owner" {
+			switch strings.ToLower(tag.Key) {
+			case "owner":
 				owner = tag.Value
-			}
-			if tag.Key == "expiry" {
+			case "expiry":
 				expiry = tag.Value
 			}
 		}

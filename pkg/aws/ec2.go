@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"c7n-helper/pkg/date"
@@ -24,17 +25,22 @@ func ParseEC2(region string, content []byte) ([]dto.Resource, error) {
 	}
 	result := make([]dto.Resource, 0, len(vms))
 	for _, vm := range vms {
-		owner, expiry := "", ""
+		owner, expiry, name := "", "", ""
 		for _, tag := range vm.Tags {
-			if tag.Key == "owner" {
+			switch strings.ToLower(tag.Key) {
+			case "owner":
 				owner = tag.Value
-			}
-			if tag.Key == "expiry" {
+			case "expiry":
 				expiry = tag.Value
+			case "name":
+				name = tag.Value
 			}
 		}
+		if name == "" {
+			name = vm.InstanceId
+		}
 		result = append(result, dto.Resource{
-			Name:     fmt.Sprintf("%s [%s]", vm.InstanceId, vm.InstanceType),
+			Name:     fmt.Sprintf("%s [%s]", name, vm.InstanceType),
 			Location: region,
 			Owner:    owner,
 			Created:  vm.LaunchTime,
