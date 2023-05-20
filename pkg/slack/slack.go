@@ -55,6 +55,9 @@ func (s *slackProvider) readUsers(ctx context.Context) error {
 		return err
 	}
 	for _, u := range users {
+		if !isValidUser(u) {
+			continue
+		}
 		s.slackIDs[u.ID] = struct{}{}
 		profile := u.Profile
 		if profile.Email != "" {
@@ -75,6 +78,10 @@ func (s *slackProvider) readUsers(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func isValidUser(u slack.User) bool {
+	return !u.Deleted && !u.IsBot && !u.IsRestricted && !u.IsUltraRestricted && !u.IsInvitedUser
 }
 
 func (s *slackProvider) readChannels(ctx context.Context) error {
