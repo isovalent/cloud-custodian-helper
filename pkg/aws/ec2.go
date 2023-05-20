@@ -37,7 +37,7 @@ func ParseEC2(region string, content []byte) ([]dto.Resource, error) {
 			}
 		}
 		if name == "" {
-			name = vm.InstanceId
+			name = fmt.Sprintf("[noname] id: %s", vm.InstanceId)
 		}
 		result = append(result, dto.Resource{
 			Name:     fmt.Sprintf("%s [%s]", name, vm.InstanceType),
