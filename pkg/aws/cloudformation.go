@@ -57,7 +57,6 @@ func listCloudFormationStacks(ctx context.Context, client *cloudformation.Client
 		}
 		for _, stack := range res.Stacks {
 			if stack.StackStatus == types.StackStatusDeleteInProgress ||
-				stack.StackStatus == types.StackStatusDeleteFailed ||
 				stack.StackStatus == types.StackStatusDeleteComplete {
 				continue
 			}
