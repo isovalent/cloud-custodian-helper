@@ -25,6 +25,7 @@ type slackProvider struct {
 	slackChannelIDs          map[string]struct{}
 	channelSlackID           map[string]string
 	emailSlackID             map[string]string
+	nameSlackID              map[string]string
 	realNameSlackID          map[string]string
 	normalRealNameSlackID    map[string]string
 	displayNameSlackID       map[string]string
@@ -41,6 +42,7 @@ func newSlackProvider(token, title, defaultChannel string) *slackProvider {
 		slackChannelIDs:          make(map[string]struct{}),
 		channelSlackID:           make(map[string]string),
 		emailSlackID:             make(map[string]string),
+		nameSlackID:              make(map[string]string),
 		realNameSlackID:          make(map[string]string),
 		normalRealNameSlackID:    make(map[string]string),
 		displayNameSlackID:       make(map[string]string),
@@ -59,6 +61,9 @@ func (s *slackProvider) readUsers(ctx context.Context) error {
 			continue
 		}
 		s.slackIDs[u.ID] = struct{}{}
+		if u.Name != "" {
+			s.nameSlackID[strings.ToLower(u.Name)] = u.ID
+		}
 		profile := u.Profile
 		if profile.Email != "" {
 			s.emailSlackID[strings.ToLower(profile.Email)] = u.ID
@@ -142,6 +147,9 @@ func (s *slackProvider) getSlackIDByOwner(owner string) string {
 		return id
 	}
 	if id, ok := s.normalRealNameSlackID[owner]; ok {
+		return id
+	}
+	if id, ok := s.nameSlackID[owner]; ok {
 		return id
 	}
 	return s.defaultChannel
