@@ -129,7 +129,10 @@ func (s *slackProvider) getSlackIDByOwner(owner string) string {
 	}
 	owner = strings.ToLower(owner)
 	if _, err := mail.ParseAddress(owner); err == nil {
-		return s.emailSlackID[owner]
+		if id, ok := s.emailSlackID[owner]; ok {
+			return id
+		}
+		return s.defaultChannel
 	}
 	if id, ok := s.channelSlackID[owner]; ok {
 		return id
