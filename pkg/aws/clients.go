@@ -30,7 +30,7 @@ func InitClientsMap(ctx context.Context, accounts []dto.Account) error {
 			key := clientKey(account.Name, resource.Location)
 			if _, ok := clientsMap[key]; !ok {
 				log.FromContext(ctx).Infof("initializing aws clients for: %s", key)
-				cfg, err := config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(account.Name), config.WithRegion(resource.Location))
+				cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(resource.Location))
 				if err != nil {
 					return err
 				}
