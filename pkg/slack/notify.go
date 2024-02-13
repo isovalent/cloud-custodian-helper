@@ -30,7 +30,7 @@ func Notify(ctx context.Context, resourceFile, slackToken, slackDefaultChannel, 
 		logger.Info("nothing to send")
 		return nil
 	}
-	slack := newSlackProvider(slackToken, title, slackDefaultChannel)
+	slack := newSlackProvider(slackToken, slackDefaultChannel)
 	logger.Info("reading slack users...")
 	if err := slack.readUsers(ctx); err != nil {
 		return err
@@ -40,7 +40,7 @@ func Notify(ctx context.Context, resourceFile, slackToken, slackDefaultChannel, 
 		return err
 	}
 	logger.Info("preparing slack messages...")
-	channelMessages := prepareSlackMessage(groupSlackMessage(report.Accounts, slack))
+	channelMessages := prepareSlackMessage(title, groupSlackMessage(report.Accounts, slack))
 	logger.Info("sending slack notification...")
 	return slack.notify(ctx, channelMessages)
 }
@@ -65,19 +65,19 @@ func groupSlackMessage(accounts []dto.Account, slack *slackProvider) map[string]
 	return groups
 }
 
-func prepareSlackMessage(groups map[string]map[string][]dto.Resource) map[string][]string {
+func prepareSlackMessage(title string, groups map[string]map[string][]dto.Resource) map[string][]string {
 	channelMessages := make(map[string][]string)
 	for channel, accountResources := range groups {
 		channelMessages[channel] = make([]string, 0)
 		for account, resources := range accountResources {
-			channelMessages[channel] = append(channelMessages[channel], fmt.Sprintf("*%s*\n", account))
 			sort.Slice(resources, func(i, j int) bool {
 				return resources[i].Created.Before(resources[j].Created)
 			})
 			buf := bytes.NewBufferString("")
 			tableprinter.Print(buf, normalizeDTO(resources))
 			for _, message := range splitMessage(buf.String()) {
-				channelMessages[channel] = append(channelMessages[channel], fmt.Sprintf("```\n%s```\n", message))
+				content := fmt.Sprintf("[%s] %s\n```\n%s```\n", account, title, message)
+				channelMessages[channel] = append(channelMessages[channel], content)
 			}
 		}
 	}

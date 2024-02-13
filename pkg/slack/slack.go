@@ -33,10 +33,9 @@ type slackProvider struct {
 	lastNameSlackID          map[string]string
 }
 
-func newSlackProvider(token, title, defaultChannel string) *slackProvider {
+func newSlackProvider(token, defaultChannel string) *slackProvider {
 	return &slackProvider{
 		client:                   slack.New(token),
-		title:                    title,
 		defaultChannel:           defaultChannel,
 		slackIDs:                 make(map[string]struct{}),
 		slackChannelIDs:          make(map[string]struct{}),
@@ -160,12 +159,6 @@ func (s *slackProvider) getSlackIDByOwner(owner string) string {
 
 func (s *slackProvider) notify(ctx context.Context, channelMessages map[string][]string) error {
 	for channel, messages := range channelMessages {
-		if s.title != "" {
-			_, _, _, err := s.client.SendMessageContext(ctx, channel, slack.MsgOptionText(s.title, false))
-			if err != nil {
-				return err
-			}
-		}
 		for _, message := range messages {
 			_, _, _, err := s.client.SendMessageContext(ctx, channel, slack.MsgOptionText(message, false))
 			if err != nil {
