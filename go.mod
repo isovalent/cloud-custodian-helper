@@ -1,6 +1,8 @@
 module c7n-helper
 
-go 1.20
+go 1.21
+
+toolchain go1.23.2
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.17.7
@@ -10,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.15.6
-	github.com/aws/smithy-go v1.13.5
+	github.com/aws/smithy-go v1.21.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lensesio/tableprinter v0.0.0-20201125135848-89e81fc956e7
 	github.com/slack-go/slack v0.12.1
