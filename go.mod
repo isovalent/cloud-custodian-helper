@@ -16,7 +16,7 @@ require (
 	github.com/slack-go/slack v0.12.1
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.0
-	go.uber.org/multierr v1.6.0
+	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.24.0
 )
 
