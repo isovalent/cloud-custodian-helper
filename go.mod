@@ -13,7 +13,7 @@ require (
 	github.com/aws/smithy-go v1.13.5
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lensesio/tableprinter v0.0.0-20201125135848-89e81fc956e7
-	github.com/slack-go/slack v0.12.1
+	github.com/slack-go/slack v0.14.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/multierr v1.6.0
