@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
-      - uses: wangyoucao577/go-release-action@b98909985b9c1fd7b0aaa4c51257a7ba49995781 # v1.37
+      - uses: wangyoucao577/go-release-action@6ac7dba1f9e61850053324549cb6bc88e4b473d2 # v1.51
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: linux
