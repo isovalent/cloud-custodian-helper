@@ -15,7 +15,7 @@ require (
 	github.com/lensesio/tableprinter v0.0.0-20201125135848-89e81fc956e7
 	github.com/slack-go/slack v0.12.1
 	github.com/spf13/cobra v1.6.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.9.0
 	go.uber.org/multierr v1.10.0
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
