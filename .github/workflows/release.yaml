@@ -16,6 +16,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: linux
           goarch: amd64
-          goversion: 1.18
+          goversion: 1.23
           binary_name: c7n-helper
           extra_files: LICENSE README.md
