@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
-      - uses: wangyoucao577/go-release-action@b98909985b9c1fd7b0aaa4c51257a7ba49995781 # v1.37
+      - uses: wangyoucao577/go-release-action@6ac7dba1f9e61850053324549cb6bc88e4b473d2 # v1.51
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: linux
           goarch: amd64
-          goversion: 1.18
+          goversion: 1.23
           binary_name: c7n-helper
           extra_files: LICENSE README.md

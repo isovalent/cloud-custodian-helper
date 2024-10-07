@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
       - name: Lint
-        uses: reviewdog/action-golangci-lint@53f8eabb87b40b1a2c63ec75b0d418bd0f4aa919 # v2.2.2
+        uses: reviewdog/action-golangci-lint@7708105983c614f7a2725e2172908b7709d1c3e4 # v2.6.2
 
   build:
     name: Build
@@ -31,7 +31,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: 1.18.x
+          go-version-file: 'go.mod'
         id: go
 
       - name: Build tool
