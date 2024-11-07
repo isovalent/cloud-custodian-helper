@@ -41,10 +41,6 @@ func DeleteResources(ctx context.Context, accounts []dto.Account, tries int, ret
 						break
 					}
 				}
-				if err == nil {
-					logger.Info("deleting cluster")
-					err = deleteEKS(ctx, cls.EKS, clusterName)
-				}
 				return err
 			})
 		}
@@ -55,6 +51,12 @@ func DeleteResources(ctx context.Context, accounts []dto.Account, tries int, ret
 func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName string) error {
 	logger := log.FromContext(ctx)
 	var errs error
+
+	logger.Info("deleting cluster")
+	if err := deleteEKS(ctx, clients.EKS, clusterName); err != nil {
+		errs = multierr.Append(errs, err)
+	}
+
 	logger.Info("listing vpc peering connections")
 	connections, err := listVpcPeeringConnections(ctx, clients.EC2, vpcID)
 	if err != nil {
