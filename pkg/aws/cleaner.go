@@ -71,7 +71,19 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 		return err
 	}
 	logger.Infof("deleting load balancers: %d", len(balancers))
+
 	if err := deleteLoadBalancers(ctx, clients.ELB, balancers); err != nil {
+		errs = multierr.Append(errs, err)
+	}
+
+	logger.Info("listing load balancers V2")
+	balancersV2, err := listLoadBalancersV2(ctx, clients.ELBv2, vpcID)
+	if err != nil {
+		return err
+	}
+	logger.Infof("deleting load balancers V2: %d", len(balancersV2))
+
+	if err := deleteLoadBalancersV2(ctx, clients.ELBv2, balancersV2); err != nil {
 		errs = multierr.Append(errs, err)
 	}
 

@@ -12,14 +12,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 )
 
 type clients struct {
-	ASG *autoscaling.Client
-	EC2 *ec2.Client
-	ELB *elasticloadbalancing.Client
-	EKS *eks.Client
-	CF  *cloudformation.Client
+	ASG   *autoscaling.Client
+	EC2   *ec2.Client
+	ELB   *elasticloadbalancing.Client
+	ELBv2 *elasticloadbalancingv2.Client
+	EKS   *eks.Client
+	CF    *cloudformation.Client
 }
 
 var clientsMap = map[string]*clients{}
@@ -35,11 +37,12 @@ func InitClientsMap(ctx context.Context, accounts []dto.Account) error {
 					return err
 				}
 				clientsMap[key] = &clients{
-					ASG: autoscaling.NewFromConfig(cfg),
-					CF:  cloudformation.NewFromConfig(cfg),
-					EC2: ec2.NewFromConfig(cfg),
-					ELB: elasticloadbalancing.NewFromConfig(cfg),
-					EKS: eks.NewFromConfig(cfg),
+					ASG:   autoscaling.NewFromConfig(cfg),
+					CF:    cloudformation.NewFromConfig(cfg),
+					EC2:   ec2.NewFromConfig(cfg),
+					ELB:   elasticloadbalancing.NewFromConfig(cfg),
+					ELBv2: elasticloadbalancingv2.NewFromConfig(cfg),
+					EKS:   eks.NewFromConfig(cfg),
 				}
 			}
 		}
