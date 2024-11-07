@@ -14,7 +14,7 @@ require (
 	github.com/aws/smithy-go v1.22.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lensesio/tableprinter v0.0.0-20201125135848-89e81fc956e7
-	github.com/slack-go/slack v0.14.0
+	github.com/slack-go/slack v0.15.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/multierr v1.11.0
