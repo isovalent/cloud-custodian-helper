@@ -60,7 +60,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing vpc peering connections")
 	connections, err := listVpcPeeringConnections(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting vpc peering connections: %d", len(connections))
 	if err := deleteVpcPeeringConnections(ctx, clients.EC2, vpcID, connections); err != nil {
@@ -70,7 +70,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing load balancers")
 	balancers, err := listLoadBalancers(ctx, clients.ELB, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting load balancers: %d", len(balancers))
 
@@ -81,7 +81,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing load balancers V2")
 	balancersV2, err := listLoadBalancersV2(ctx, clients.ELBv2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting load balancers V2: %d", len(balancersV2))
 
@@ -92,7 +92,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing autoscaling groups")
 	scalingGroups, err := listAutoScalingGroups(ctx, clients.ASG, clusterName)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting autoscaling groups: %d", len(scalingGroups))
 	if err := deleteAutoScalingGroups(ctx, clients.ASG, clients.EC2, scalingGroups); err != nil {
@@ -102,7 +102,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing reservation")
 	reservations, err := listReservations(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting reservation: %d", len(reservations))
 	if err := terminateInstancesInReservations(ctx, clients.EC2, reservations); err != nil {
@@ -112,7 +112,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing network acl")
 	acls, err := listNonDefaultNetworkAcls(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting network acl: %d", len(acls))
 	if err := deleteNetworkAcls(ctx, clients.EC2, vpcID, acls); err != nil {
@@ -122,7 +122,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing elastic ips")
 	ips, err := listElasticIps(ctx, clients.EC2, clusterName)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting elastic ips: %d", len(ips))
 	if err := releaseElasticIps(ctx, clients.EC2, ips); err != nil {
@@ -132,7 +132,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing nat gateways")
 	nats, err := listNatGateways(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting nat gateways: %d", len(nats))
 	if err := deleteNatGateways(ctx, clients.EC2, nats); err != nil {
@@ -142,7 +142,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing internet gateways")
 	gws, err := listInternetGateways(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting internet gateways: %d", len(gws))
 	if err := deleteInternetGateways(ctx, clients.EC2, vpcID, gws); err != nil {
@@ -152,7 +152,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing network interfaces")
 	interfaces, err := listNetworkInterfaces(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting network interfaces: %d", len(interfaces))
 	if err := deleteNetworkInterfaces(ctx, clients.EC2, interfaces); err != nil {
@@ -162,7 +162,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing subnets")
 	subnets, err := listSubnets(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting subnets: %d", len(subnets))
 	if err := deleteSubnets(ctx, clients.EC2, vpcID, subnets); err != nil {
@@ -172,7 +172,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing security groups")
 	secGroups, err := listNonDefaultSecurityGroups(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting security groups: %d", len(secGroups))
 	if err := deleteSecurityGroups(ctx, clients.EC2, vpcID, secGroups); err != nil {
@@ -182,7 +182,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing vpn gateways")
 	vpns, err := listVpnGateways(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting vpn gateways: %d", len(vpns))
 	if err := deleteVpnGateways(ctx, clients.EC2, vpcID, vpns); err != nil {
@@ -192,7 +192,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 	logger.Info("listing route tables")
 	routes, err := listRouteTables(ctx, clients.EC2, vpcID)
 	if err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	logger.Infof("deleting route tables: %d", len(routes))
 	if err := deleteRouteTables(ctx, clients.EC2, vpcID, routes); err != nil {
@@ -211,7 +211,7 @@ func deleteVpcAndEks(ctx context.Context, clients *clients, vpcID, clusterName s
 
 	logger.Info("deleting cloud formation")
 	if _, err := listCloudFormationStacks(ctx, clients.CF, clusterName); err != nil {
-		return err
+		return multierr.Append(errs, err)
 	}
 	if err := deleteCloudFormation(ctx, clients.CF, clusterName); err != nil {
 		errs = multierr.Append(errs, err)
