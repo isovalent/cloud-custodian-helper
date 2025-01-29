@@ -7,6 +7,8 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"c7n-helper/pkg/log"
+
 	"github.com/slack-go/slack"
 )
 
@@ -162,6 +164,7 @@ func (s *slackProvider) notify(ctx context.Context, channelMessages map[string][
 		for _, message := range messages {
 			_, _, _, err := s.client.SendMessageContext(ctx, channel, slack.MsgOptionText(message, false))
 			if err != nil {
+				log.FromContext(ctx).Errorf("channel [%s] notification error (check if C7N bot invited!): %s", channel, err)
 				return err
 			}
 			time.Sleep(time.Millisecond * 150) // pause to avoid slack rate limits
