@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.41.1
-	github.com/aws/smithy-go v1.22.0
+	github.com/aws/smithy-go v1.22.2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lensesio/tableprinter v0.0.0-20201125135848-89e81fc956e7
 	github.com/slack-go/slack v0.14.0
